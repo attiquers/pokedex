@@ -1,17 +1,19 @@
-interface Ability {
-  ability: { name: string; url: string };
-  is_hidden: boolean;
-  slot: number;
-}
+// components/PokemonBasicInfo.tsx
+
+import { PokemonData } from '@/app/pokemon/[name]/page'; // Import the type
 
 interface PokemonBasicInfoProps {
-  height: number;
-  weight: number;
+  height: number; // in meters
+  weight: number; // in kilograms
   category: string;
-  abilities: Ability[];
+  abilities: PokemonData['abilities'];
   maleRatio: number | null;
   femaleRatio: number | null;
+  baseHappiness: number | null; // Added based on typical Pokemon info
 }
+
+const capitalizeFirstLetter = (string: string) => string.charAt(0).toUpperCase() + string.slice(1);
+
 
 export default function PokemonBasicInfo({
   height,
@@ -20,47 +22,50 @@ export default function PokemonBasicInfo({
   abilities,
   maleRatio,
   femaleRatio,
+  baseHappiness,
 }: PokemonBasicInfoProps) {
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg shadow-md mb-8">
-      <h2 className="text-3xl font-bold text-blue-700 mb-6">Basic Information</h2>
-      <div className="grid grid-cols-2 gap-4 text-lg">
-        <div>
-          <span className="font-semibold text-gray-700">Height:</span> {height / 10} m
+    <div className="bg-[#334155] rounded-xl p-6 shadow-lg border border-gray-600">
+      <h3 className="text-xl font-bold text-gray-100 mb-4">Basic Info</h3>
+      <div className="grid grid-cols-2 gap-4 text-gray-300 text-lg">
+        <div className="flex flex-col">
+          <span className="font-semibold text-gray-200">Height</span>
+          <span>{height.toFixed(1)} m</span>
         </div>
-        <div>
-          <span className="font-semibold text-gray-700">Category:</span> {category}
+        <div className="flex flex-col">
+          <span className="font-semibold text-gray-200">Weight</span>
+          <span>{weight.toFixed(1)} kg</span>
         </div>
-        <div>
-          <span className="font-semibold text-gray-700">Weight:</span> {weight / 10} kg
+        <div className="flex flex-col">
+          <span className="font-semibold text-gray-200">Category</span>
+          <span>{category} Pokémon</span>
         </div>
-        <div>
-          <span className="font-semibold text-gray-700">Abilities:</span>
-          <div className="flex flex-wrap gap-x-2">
-            {abilities.map((ab, index) => (
-              <span key={ab.ability.name} className="capitalize">
-                {ab.ability.name}
-                {ab.is_hidden && <span className="text-sm text-gray-500">(H)</span>}
-                {index < abilities.length - 1 && ', '}
-              </span>
-            ))}
-          </div>
+        <div className="flex flex-col">
+          <span className="font-semibold text-gray-200">Ability</span>
+          <span>
+            {abilities.map(a => capitalizeFirstLetter(a.ability.name)).join(', ')}
+          </span>
         </div>
         {maleRatio !== null && femaleRatio !== null && (
-            <div className="col-span-2">
-            <span className="font-semibold text-gray-700">Gender: </span>
-                {maleRatio > 0 && (
-                    <span className="text-blue-500 font-bold mr-2">♂ {maleRatio}%</span>
-                )}
-                {femaleRatio > 0 && (
-                    <span className="text-pink-500 font-bold">♀ {femaleRatio}%</span>
-                )}
+            <div className="flex flex-col col-span-2">
+                <span className="font-semibold text-gray-200 mb-1">Gender</span>
+                <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                        <svg className="w-5 h-5 text-blue-400 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8 6a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd"></path></svg>
+                        <span className="text-blue-400">{maleRatio.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex items-center">
+                        <svg className="w-5 h-5 text-pink-400 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8 6a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd"></path></svg>
+                        <span className="text-pink-400">{femaleRatio.toFixed(1)}%</span>
+                    </div>
+                </div>
             </div>
         )}
-        {maleRatio === 0 && femaleRatio === 0 && (
-          <div className="col-span-2">
-            <span className="font-semibold text-gray-700">Gender:</span> Genderless
-          </div>
+        {baseHappiness !== null && (
+             <div className="flex flex-col col-span-2">
+                <span className="font-semibold text-gray-200">Base Happiness</span>
+                <span>{baseHappiness}</span>
+             </div>
         )}
       </div>
     </div>

@@ -1,109 +1,137 @@
+// components/PokemonEvolutionChain.tsx
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { EvolutionNode, PokemonData, Type } from '@/app/pokemon/[name]/page'; // Import types from main page
+import { EvolutionNode } from '@/app/pokemon/[name]/page'; // Import the type
 
-// Function to get a distinct color for each type (copy-paste from PokemonTypes for now)
-const getTypeColor = (typeName: string): string => {
-    const colors: { [key: string]: string } = {
-      normal: 'bg-gray-400',
-      fire: 'bg-red-500',
-      water: 'bg-blue-500',
-      grass: 'bg-green-500',
-      electric: 'bg-yellow-500',
-      ice: 'bg-blue-200',
-      fighting: 'bg-red-700',
-      poison: 'bg-purple-600',
-      ground: 'bg-yellow-700',
-      flying: 'bg-blue-300',
-      psychic: 'bg-pink-500',
-      bug: 'bg-lime-500',
-      rock: 'bg-yellow-800',
-      ghost: 'bg-indigo-700',
-      dragon: 'bg-purple-700',
-      steel: 'bg-gray-500',
-      dark: 'bg-gray-800',
-      fairy: 'bg-pink-300',
-    };
-    return colors[typeName.toLowerCase()] || 'bg-gray-500'; // Default gray
-};
-
-interface EvolutionChainProps {
+interface PokemonEvolutionChainProps {
   evolutionChain: EvolutionNode;
   currentPokemonId: number;
 }
 
-// Helper function to fetch minimal Pokémon data (sprite and types)
-async function getMinimalPokemonData(pokemonName: string): Promise<{ sprite: string | null; types: Type[] } | null> {
-  try {
-    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`);
-    if (!res.ok) return null;
-    const data: PokemonData = await res.json();
-    const sprite = data.sprites.other?.['official-artwork']?.front_default || data.sprites.front_default;
-    return { sprite, types: data.types };
-  } catch (error) {
-    console.error(`Error fetching minimal data for ${pokemonName}:`, error);
-    return null;
+const formatPokemonId = (id: number): string => String(id).padStart(4, '0');
+const capitalizeFirstLetter = (string: string) => string.charAt(0).toUpperCase() + string.slice(1);
+
+// Recursive function to flatten the evolution chain
+async function fetchEvolutionStages(node: EvolutionNode): Promise<{ id: number; name: string; imageUrl: string; types: { type: { name: string } }[] }[]> {
+  const stages: { id: number; name: string; imageUrl: string; types: { type: { name: string } }[] }[] = [];
+
+  const fetchPokemonDetails = async (name: string) => {
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+      if (!res.ok) throw new Error(`Failed to fetch pokemon details for ${name}`);
+      const data = await res.json();
+      return {
+        id: data.id,
+        name: data.name,
+        imageUrl: data.sprites.other?.['official-artwork']?.front_default || data.sprites.front_default,
+        types: data.types,
+      };
+    } catch (error) {
+      console.error(`Error fetching details for ${name}:`, error);
+      return null;
+    }
+  };
+
+  const currentPokemonDetails = await fetchPokemonDetails(node.species.name);
+  if (currentPokemonDetails) {
+    stages.push(currentPokemonDetails);
   }
+
+  for (const evolution of node.evolves_to) {
+    const nextStages = await fetchEvolutionStages(evolution);
+    stages.push(...nextStages);
+  }
+
+  // Sort by ID to ensure correct order
+  return stages.sort((a, b) => a.id - b.id);
 }
 
-// Recursive function to build the evolution chain display
-async function buildEvolutionNodes(node: EvolutionNode): Promise<JSX.Element[]> {
-  const pokemonData = await getMinimalPokemonData(node.species.name);
-  const pokemonIdMatch = node.species.url.match(/\/(\d+)\/$/);
-  const pokemonId = pokemonIdMatch ? parseInt(pokemonIdMatch[1]) : null;
+// Mapping for type colors (duplicate from page.tsx for self-contained component)
+const typeColors: { [key: string]: string } = {
+  normal: 'bg-gray-400',
+  fire: 'bg-red-500',
+  water: 'bg-blue-500',
+  grass: 'bg-green-500',
+  electric: 'bg-yellow-400',
+  ice: 'bg-blue-200',
+  fighting: 'bg-red-700',
+  poison: 'bg-purple-600',
+  ground: 'bg-yellow-700',
+  flying: 'bg-indigo-400',
+  psychic: 'bg-pink-500',
+  bug: 'bg-lime-500',
+  rock: 'bg-stone-500',
+  ghost: 'bg-indigo-700',
+  dragon: 'bg-indigo-800',
+  steel: 'bg-slate-400',
+  dark: 'bg-gray-800',
+  fairy: 'bg-pink-300',
+};
 
-  const renderNode = (
-    <Link key={node.species.name} href={`/pokemon/${node.species.name.toLowerCase()}`}>
-        <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border border-gray-200">
-            {pokemonData?.sprite && (
-                <Image
-                    src={pokemonData.sprite}
-                    alt={node.species.name}
-                    width={96}
-                    height={96}
-                    className="object-contain"
-                />
-            )}
-            <p className="font-bold text-lg capitalize text-gray-800 mt-2">{node.species.name}</p>
-            {pokemonId && (
-                <p className="text-gray-500 text-sm">#{String(pokemonId).padStart(3, '0')}</p>
-            )}
-            <div className="flex gap-1 mt-1">
-                {pokemonData?.types.map(typeInfo => (
-                    <span key={typeInfo.type.name} className={`px-2 py-0.5 rounded-full text-xs font-semibold text-white capitalize ${getTypeColor(typeInfo.type.name)}`}>
-                        {typeInfo.type.name}
+// Emoji mapping for types (re-defined or import from a central utility)
+const typeEmojis: { [key: string]: string } = {
+  normal: '⚪',
+  fire: '🔥',
+  water: '💧',
+  grass: '🌿', // Grass emoji
+  electric: '⚡',
+  ice: '❄️',
+  fighting: '🥊',
+  poison: '☠️', // Poison emoji
+  ground: '⛰️',
+  flying: '🦅',
+  psychic: '🔮',
+  bug: '🐛',
+  rock: '🪨',
+  ghost: '👻',
+  dragon: '🐉',
+  steel: '⚙️',
+  dark: '🌙',
+  fairy: '✨',
+};
+
+export default async function PokemonEvolutionChain({ evolutionChain, currentPokemonId }: PokemonEvolutionChainProps) {
+  const evolutionStages = await fetchEvolutionStages(evolutionChain);
+
+  return (
+    <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10">
+      {evolutionStages.map((stage, index) => (
+        <div key={stage.id} className="flex items-center">
+          <Link href={`/pokemon/${stage.name}`} className={`flex flex-col items-center p-3 rounded-xl transition-all duration-300
+            ${stage.id === currentPokemonId ? 'border-4 border-blue-400 scale-105 shadow-lg' : 'border border-gray-600'}
+            bg-[#2D3748] hover:bg-[#334155] shadow-md
+          `}>
+            <div className="relative w-24 h-24 mb-2">
+              <Image
+                src={stage.imageUrl || '/placeholder-pokemon.png'}
+                alt={stage.name}
+                width={96}
+                height={96}
+                className="object-contain w-full h-full"
+              />
+            </div>
+            <span className="text-gray-300 text-sm font-semibold mb-1">
+              {formatPokemonId(stage.id)}
+            </span>
+            <span className="text-white font-bold text-lg">
+              {capitalizeFirstLetter(stage.name)}
+            </span>
+            <div className="flex flex-wrap justify-center gap-1 mt-1">
+                {stage.types.map(typeInfo => (
+                    <span key={typeInfo.type.name} className={`px-2 py-0.5 rounded-full text-xs text-white flex items-center ${typeColors[typeInfo.type.name] || 'bg-gray-500'}`}>
+                        {typeEmojis[typeInfo.type.name]} <span className="ml-1">{capitalizeFirstLetter(typeInfo.type.name)}</span>
                     </span>
                 ))}
             </div>
+          </Link>
+          {index < evolutionStages.length - 1 && (
+            <div className="mx-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+          )}
         </div>
-    </Link>
-  );
-
-  if (node.evolves_to.length === 0) {
-    return [renderNode];
-  } else {
-    const nextEvolutionStages: JSX.Element[] = [];
-    for (const nextEvolution of node.evolves_to) {
-      nextEvolutionStages.push(
-        <div key={`${node.species.name}-to-${nextEvolution.species.name}`} className="flex items-center">
-          <div className="text-gray-400 text-3xl mx-4">❯</div> {/* Arrow separator */}
-          {(await buildEvolutionNodes(nextEvolution)).flat()}
-        </div>
-      );
-    }
-    return [renderNode, ...nextEvolutionStages];
-  }
-}
-
-export default async function PokemonEvolutionChain({ evolutionChain }: EvolutionChainProps) {
-  const evolutionTree = await buildEvolutionNodes(evolutionChain);
-
-  return (
-    <div className="bg-gray-50 p-6 rounded-lg shadow-md">
-      <h2 className="text-3xl font-bold text-gray-700 mb-6 text-center">Evolution Chain</h2>
-      <div className="flex flex-wrap justify-center items-center gap-4">
-        {evolutionTree}
-      </div>
+      ))}
     </div>
   );
 }

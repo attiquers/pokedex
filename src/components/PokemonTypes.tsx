@@ -1,50 +1,47 @@
-interface Type {
-  slot: number;
-  type: { name: string; url: string };
-}
+// components/PokemonTypes.tsx
+
+import { Type } from '@/app/pokemon/[name]/page'; // Import the type
 
 interface PokemonTypesProps {
   types: Type[];
+  typeColors: { [key: string]: string }; // Pass the color map
 }
 
-// Function to get a distinct color for each type
-const getTypeColor = (typeName: string): string => {
-  const colors: { [key: string]: string } = {
-    normal: 'bg-gray-400',
-    fire: 'bg-red-500',
-    water: 'bg-blue-500',
-    grass: 'bg-green-500',
-    electric: 'bg-yellow-500',
-    ice: 'bg-blue-200',
-    fighting: 'bg-red-700',
-    poison: 'bg-purple-600',
-    ground: 'bg-yellow-700',
-    flying: 'bg-blue-300',
-    psychic: 'bg-pink-500',
-    bug: 'bg-lime-500',
-    rock: 'bg-yellow-800',
-    ghost: 'bg-indigo-700',
-    dragon: 'bg-purple-700',
-    steel: 'bg-gray-500',
-    dark: 'bg-gray-800',
-    fairy: 'bg-pink-300',
-  };
-  return colors[typeName.toLowerCase()] || 'bg-gray-500'; // Default gray
+const capitalizeFirstLetter = (string: string) => string.charAt(0).toUpperCase() + string.slice(1);
+
+// Emoji mapping for types
+const typeEmojis: { [key: string]: string } = {
+  normal: '⚪',
+  fire: '🔥',
+  water: '💧',
+  grass: '🌿', // Grass emoji
+  electric: '⚡',
+  ice: '❄️',
+  fighting: '🥊',
+  poison: '☠️', // Poison emoji
+  ground: '⛰️',
+  flying: '🦅',
+  psychic: '🔮',
+  bug: '🐛',
+  rock: '🪨',
+  ghost: '👻',
+  dragon: '🐉',
+  steel: '⚙️',
+  dark: '🌙',
+  fairy: '✨',
 };
 
-export default function PokemonTypes({ types }: PokemonTypesProps) {
-  if (!types || types.length === 0) return null;
-
+export default function PokemonTypes({ types, typeColors }: PokemonTypesProps) {
   return (
-    <div className="bg-gray-50 p-6 rounded-lg shadow-md mb-8">
-      <h2 className="text-3xl font-bold text-gray-700 mb-6 text-center">Type</h2>
-      <div className="flex flex-wrap justify-center gap-4">
+    <div className="bg-[#334155] rounded-xl p-6 shadow-lg border border-gray-600">
+      <h3 className="text-xl font-bold text-gray-100 mb-4">Type</h3>
+      <div className="flex flex-wrap gap-3">
         {types.map((typeInfo) => (
           <span
             key={typeInfo.type.name}
-            className={`px-6 py-2 rounded-full text-white text-xl font-bold shadow-md capitalize ${getTypeColor(typeInfo.type.name)}`}
+            className={`px-5 py-2 rounded-full text-white font-semibold text-lg shadow-md flex items-center justify-center ${typeColors[typeInfo.type.name] || 'bg-gray-500'}`}
           >
-            {typeInfo.type.name}
+            {typeEmojis[typeInfo.type.name]} <span className="ml-2">{capitalizeFirstLetter(typeInfo.type.name)}</span>
           </span>
         ))}
       </div>
