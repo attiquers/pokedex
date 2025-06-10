@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient'; // Adjust path based on your setup
+import { FaGoogle } from 'react-icons/fa';
+import { useUser } from '@/lib/useUser';
 
 const SignInSignUpModal = ({ onClose }: { onClose: () => void }) => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -8,6 +10,8 @@ const SignInSignUpModal = ({ onClose }: { onClose: () => void }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const { user, loading: userLoading } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +51,58 @@ const SignInSignUpModal = ({ onClose }: { onClose: () => void }) => {
     setLoading(false);
   };
 
+  const handleOAuthSignIn = async () => {
+    setError('');
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    if (error) setError(error.message);
+    setLoading(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setShowSidebar(false);
+  };
+
+  if (user) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-50">
+          <button onClick={() => setShowSidebar(true)} className="focus:outline-none">
+            <img
+              src={user.user_metadata?.avatar_url || '/pokeball.png'}
+              alt="Profile"
+              className="w-12 h-12 rounded-full border-2 border-blue-500 shadow-lg object-cover"
+            />
+          </button>
+        </div>
+        {showSidebar && (
+          <div className="fixed inset-0 z-50 flex">
+            <div className="w-64 bg-white h-full shadow-2xl p-6 flex flex-col">
+              <div className="flex items-center mb-6">
+                <img
+                  src={user.user_metadata?.avatar_url || '/pokeball.png'}
+                  alt="Profile"
+                  className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover"
+                />
+                <div className="ml-4">
+                  <div className="font-bold text-lg text-gray-800">{user.email}</div>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="mt-auto bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow"
+              >
+                Log Out
+              </button>
+            </div>
+            <div className="flex-1 bg-black bg-opacity-40" onClick={() => setShowSidebar(false)} />
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full relative transform transition-all duration-300 ease-out scale-95 opacity-0 animate-scaleIn">
@@ -75,7 +131,7 @@ const SignInSignUpModal = ({ onClose }: { onClose: () => void }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-500"
             />
           </div>
 
@@ -89,7 +145,7 @@ const SignInSignUpModal = ({ onClose }: { onClose: () => void }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-500"
             />
           </div>
 
@@ -104,7 +160,7 @@ const SignInSignUpModal = ({ onClose }: { onClose: () => void }) => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 placeholder-gray-500"
               />
             </div>
           )}
@@ -117,6 +173,15 @@ const SignInSignUpModal = ({ onClose }: { onClose: () => void }) => {
             } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:scale-105`}
           >
             {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOAuthSignIn}
+            className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-gray-800 font-semibold hover:bg-gray-100 transition mt-2"
+            disabled={loading}
+          >
+            <FaGoogle /> Continue with Google
           </button>
         </form>
 

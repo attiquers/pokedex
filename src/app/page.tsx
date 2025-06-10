@@ -7,6 +7,8 @@ import Image from 'next/image';
 import PokemonCard from '@/components/PokemonCard';
 import CustomSearch from '@/components/CustomSearch';
 import SignInSignUpModal from '@/components/SignInSignUpModal'; // ✅ Import modal
+import { useUser } from '@/lib/useUser';
+import UserSidebar from '@/components/userSidebar';
 
 interface Pokemon {
   name: string;
@@ -14,6 +16,7 @@ interface Pokemon {
 }
 
 export default function Home() {
+  const { user, loading: userLoading } = useUser();
   const [pokemonName, setPokemonName] = useState('');
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>('https://pokeapi.co/api/v2/pokemon?limit=12');
@@ -58,19 +61,24 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-sky-700 to-blue-900 p-6 text-white">
-      
-      {/* Sign In trigger */}
-      <div className="absolute top-0 right-0 p-4">
-        <h1 
-          className="text-2xl font-bold cursor-pointer hover:underline"
-          onClick={() => setShowModal(true)} // ✅ Toggle modal
-        >
-          Sign In
-        </h1>
-      </div>
+      {/* Auth UI */}
+      {!userLoading && (
+        user ? (
+          <UserSidebar avatarUrl={user.user_metadata?.avatar_url || '/pokeball.png'} email={user.email} />
+        ) : (
+          <div className="absolute top-0 right-0 p-4">
+            <h1
+              className="text-2xl font-bold cursor-pointer hover:underline"
+              onClick={() => setShowModal(true)}
+            >
+              Sign In
+            </h1>
+          </div>
+        )
+      )}
 
       {/* Modal */}
-      {showModal && (
+      {showModal && !user && (
         <SignInSignUpModal onClose={() => setShowModal(false)} />
       )}
 
