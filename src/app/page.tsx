@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+
 import PokemonCard from '@/components/PokemonCard';
 import CustomSearch from '@/components/CustomSearch';
+import SignInSignUpModal from '@/components/SignInSignUpModal'; // ✅ Import modal
 
 interface Pokemon {
   name: string;
@@ -17,6 +19,7 @@ export default function Home() {
   const [nextUrl, setNextUrl] = useState<string | null>('https://pokeapi.co/api/v2/pokemon?limit=12');
   const [loading, setLoading] = useState(false);
   const [showCustomSearch, setShowCustomSearch] = useState(false);
+  const [showModal, setShowModal] = useState(false); // ✅ Modal state
 
   const router = useRouter();
 
@@ -55,6 +58,22 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-sky-700 to-blue-900 p-6 text-white">
+      
+      {/* Sign In trigger */}
+      <div className="absolute top-0 right-0 p-4">
+        <h1 
+          className="text-2xl font-bold cursor-pointer hover:underline"
+          onClick={() => setShowModal(true)} // ✅ Toggle modal
+        >
+          Sign In
+        </h1>
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <SignInSignUpModal onClose={() => setShowModal(false)} />
+      )}
+
       <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-8 w-full max-w-4xl mb-8">
         <Image
           src="/pokeball.png"
