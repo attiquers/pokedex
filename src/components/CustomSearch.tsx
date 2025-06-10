@@ -86,53 +86,76 @@ export default function CustomSearch({ onSearchResults }: CustomSearchProps) {
   };
 
   return (
-    <div className="w-full max-w-2xl bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl shadow-xl">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-        <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="bg-white/20 rounded px-4 py-2">
-          <option value="">Select Type</option>
-          {types.map((type) => (
-            <option key={type} value={type}>{type}</option>
-          ))}
-        </select>
-
-        <select value={selectedAbility} onChange={(e) => setSelectedAbility(e.target.value)} className="bg-white/20 rounded px-4 py-2">
-          <option value="">Select Ability</option>
-          {abilities.map((ability) => (
-            <option key={ability} value={ability}>{ability}</option>
-          ))}
-        </select>
-
-        <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)} className="bg-white/20 rounded px-4 py-2">
-          <option value="">Select Region</option>
-          {regions.map((region) => (
-            <option key={region} value={region}>{region}</option>
-          ))}
-        </select>
-
-        <div className="flex gap-2">
-          <input
-            type="number"
-            value={rangeMin}
-            onChange={(e) => setRangeMin(Number(e.target.value))}
-            placeholder="Min ID"
-            className="w-full px-2 py-1 rounded bg-white/20"
-          />
-          <input
-            type="number"
-            value={rangeMax}
-            onChange={(e) => setRangeMax(Number(e.target.value))}
-            placeholder="Max ID"
-            className="w-full px-2 py-1 rounded bg-white/20"
-          />
+    <div className="w-full max-w-2xl bg-gradient-to-br from-white/30 to-cyan-100/40 backdrop-blur-lg border border-white/30 p-8 rounded-3xl shadow-2xl">
+      <h2 className="text-2xl font-bold text-cyan-700 mb-6 text-center drop-shadow">Custom Pokémon Search</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-cyan-800 mb-1 pl-1">Type</label>
+          <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="bg-white/40 border border-cyan-200 rounded px-4 py-2 focus:ring-2 focus:ring-cyan-400 outline-none transition">
+            <option value="">Select Type</option>
+            {types.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-cyan-800 mb-1 pl-1">Ability</label>
+          <select value={selectedAbility} onChange={(e) => setSelectedAbility(e.target.value)} className="bg-white/40 border border-cyan-200 rounded px-4 py-2 focus:ring-2 focus:ring-cyan-400 outline-none transition">
+            <option value="">Select Ability</option>
+            {abilities.map((ability) => (
+              <option key={ability} value={ability}>{ability}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-cyan-800 mb-1 pl-1">Region</label>
+          <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)} className="bg-white/40 border border-cyan-200 rounded px-4 py-2 focus:ring-2 focus:ring-cyan-400 outline-none transition">
+            <option value="">Select Region</option>
+            {regions.map((region) => (
+              <option key={region} value={region}>{region}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-cyan-800 mb-1 pl-1">Pokédex ID Range</label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={rangeMin}
+              onChange={(e) => setRangeMin(Number(e.target.value))}
+              placeholder="Min ID"
+              className="w-full px-2 py-1 rounded bg-white/40 border border-cyan-200 focus:ring-2 focus:ring-cyan-400 outline-none transition"
+              min={1}
+              max={rangeMax}
+            />
+            <input
+              type="number"
+              value={rangeMax}
+              onChange={(e) => setRangeMax(Number(e.target.value))}
+              placeholder="Max ID"
+              className="w-full px-2 py-1 rounded bg-white/40 border border-cyan-200 focus:ring-2 focus:ring-cyan-400 outline-none transition"
+              min={rangeMin}
+              max={1025}
+            />
+          </div>
         </div>
       </div>
-
       <button
         onClick={handleCustomSearch}
-        className="mt-6 bg-cyan-400 hover:bg-cyan-500 text-white px-6 py-2 rounded-full w-full sm:w-auto block mx-auto transition transform hover:scale-105"
+        className="mt-8 bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-3 rounded-full w-full sm:w-auto block mx-auto text-lg font-semibold shadow-lg transition transform hover:scale-105 focus:ring-2 focus:ring-cyan-400"
       >
         Apply Filters
       </button>
+      <style jsx global>{`
+        .sidebar-action-btn {
+          /* Ensure pointer on hover for all sidebar action buttons */
+        }
+        select:focus {
+          background-color: #1565c0 !important; /* dark blue shade */
+          color: #fff;
+          outline: none;
+        }
+      `}</style>
     </div>
   );
 }

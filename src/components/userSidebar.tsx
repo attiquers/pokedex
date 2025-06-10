@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
 
 interface UserSidebarProps {
   avatarUrl?: string;
@@ -8,6 +9,7 @@ interface UserSidebarProps {
 
 export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: UserSidebarProps) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -32,18 +34,45 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
       </button>
       {/* Sidebar */}
       {open && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="w-64 bg-white h-full shadow-2xl p-6 flex flex-col animate-slideInRight">
-            <div className="flex items-center mb-6">
+        <>
+          {/* Glassmorphic black overlay */}
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-md transition-opacity duration-200"
+            onClick={() => setOpen(false)}
+            aria-label="Close user sidebar"
+          />
+          {/* Sidebar */}
+          <div className="fixed top-0 right-0 h-full w-72 max-w-full z-50 bg-white shadow-2xl p-6 flex flex-col border-l border-gray-200 animate-slideInRight">
+            {/* Close (X) button */}
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none"
+              onClick={() => setOpen(false)}
+              aria-label="Close sidebar"
+              type="button"
+            >
+              ×
+            </button>
+            <div className="flex flex-col items-center mb-8 mt-2">
               <img
                 src={avatarUrl}
                 alt="Profile"
-                className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover"
+                className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover mb-2"
               />
-              <div className="ml-4">
-                <div className="font-bold text-lg text-gray-800">{email}</div>
-              </div>
+              <div className="font-bold text-lg text-gray-800">{email?.split('@')[0] || 'Trainer'}</div>
+              <div className="text-xs text-gray-500 mt-1">{email}</div>
             </div>
+            <button className="mb-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => { setOpen(false); router.push('/region'); }}>
+              Catch Pokémon
+            </button>
+            <button className="mb-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => {/* TODO: my pokemons action */}}>
+              My Pokémons
+            </button>
+            <button className="mb-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => {/* TODO: resources action */}}>
+              Resources
+            </button>
+            <button className="mb-6 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => {/* TODO: quiz action */}}>
+              Quiz
+            </button>
             <button
               onClick={handleLogout}
               className="mt-auto bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow"
@@ -51,12 +80,7 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
               Log Out
             </button>
           </div>
-          <div
-            className="flex-1 bg-black bg-opacity-40"
-            onClick={() => setOpen(false)}
-            aria-label="Close user sidebar"
-          />
-        </div>
+        </>
       )}
       <style jsx>{`
         @keyframes slideInRight {
@@ -65,6 +89,9 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
         }
         .animate-slideInRight {
           animation: slideInRight 0.2s ease-out;
+        }
+        .sidebar-action-btn:hover {
+          cursor: pointer;
         }
       `}</style>
     </>
