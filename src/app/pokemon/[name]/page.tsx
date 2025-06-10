@@ -220,14 +220,8 @@ const getWeaknesses = (types: Type[]) => {
   return Array.from(weaknessesSet);
 };
 
-interface PageProps {
-  params: {
-    name: string; // Dynamic route parameters are always strings
-  };
-}
-
-export default async function PokemonDetail({ params }: PageProps) {
-  const pokemonName = params.name; // 'pokemonName' will be a string like "pikachu"
+export default async function PokemonDetail({ params }: { params: { name: string } }) {
+  const pokemonName = params.name;
   const pokemon = await getPokemonData(pokemonName);
 
   if (!pokemon) return notFound();
@@ -255,106 +249,81 @@ export default async function PokemonDetail({ params }: PageProps) {
   // Get weaknesses using the revised function
   const weaknesses = getWeaknesses(pokemon.types);
 
-
   return (
-    // Main container to mimic the dark background and overall structure
     <div className="min-h-screen bg-[#1F2937] text-white font-sans flex flex-col items-center py-10 px-4">
       <div className="w-full max-w-7xl">
-   
-        {/* Main Content Area */}
         <div className="bg-[#2D3748] rounded-2xl shadow-2xl max-w-6xl w-full mx-auto p-8 lg:p-12 border border-[#4B5563]">
-            <PokemonHeader
-                pokemonId={pokemon.id}
-                pokemonName={pokemon.name}
-                prevId={prevId}
-                nextId={nextId}
-                pokemonNamePrev={prevId ? `Bulbasaur` : null} // Hardcoded for demo, fetch if possible
-                pokemonNameNext={nextId ? `Venusaur` : null} // Hardcoded for demo, fetch if possible
-            />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mt-8">
-                {/* Left Column: Image, Versions, Style */}
-                <div className="flex flex-col items-center">
-                    {/* Pokemon Image with Glow Effect */}
-                    <div className="relative w-full max-w-sm aspect-square rounded-full flex items-center justify-center
-                                    bg-gradient-to-br from-blue-400 to-green-400 p-1 mb-8
-                                    before:content-[''] before:absolute before:inset-0 before:rounded-full
-                                    before:bg-gradient-to-br before:from-blue-600 before:to-green-600 before:blur-md before:opacity-75
-                                    before:z-[-1] overflow-hidden">
-                        <div className="relative w-full h-full rounded-full flex items-center justify-center bg-[#2D3748]">
-                            <Image
-                                src={pokemon.sprites.other?.['official-artwork']?.front_default || pokemon.sprites.front_default || '/placeholder-pokemon.png'}
-                                alt={pokemon.name}
-                                width={350}
-                                height={350}
-                                className="object-contain w-full h-full drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                                priority
-                            />
-                        </div>
-                    </div>
-
-                    {/* Versions/Description */}
-                    <div className="bg-[#334155] rounded-xl p-6 w-full shadow-lg border border-gray-600 mb-8">
-                        <h3 className="text-xl font-bold text-gray-100 mb-3 flex items-center">
-                            Versions
-                            <span className="ml-2 text-blue-400">●</span>
-                            <span className="ml-1 text-green-400">●</span>
-                        </h3>
-                        <p className="text-gray-300 text-base leading-relaxed">
-                            {flavorText}
-                        </p>
-                    </div>
-
-                    {/* Style Section */}
-                    <div className="bg-[#334155] rounded-xl p-6 w-full shadow-lg border border-gray-600">
-                        <h3 className="text-xl font-bold text-gray-100 mb-3">Style</h3>
-                        <p className="text-gray-300 text-base">
-                            This Pokémon does not have different form.
-                        </p>
-                    </div>
+          <PokemonHeader
+            pokemonId={pokemon.id}
+            pokemonName={pokemon.name}
+            prevId={prevId}
+            nextId={nextId}
+            pokemonNamePrev={prevId ? `Bulbasaur` : null}
+            pokemonNameNext={nextId ? `Venusaur` : null}
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mt-8">
+            <div className="flex flex-col items-center">
+              <div className="relative w-full max-w-sm aspect-square rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-green-400 p-1 mb-8 before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-blue-600 before:to-green-600 before:blur-md before:opacity-75 before:z-[-1] overflow-hidden">
+                <div className="relative w-full h-full rounded-full flex items-center justify-center bg-[#2D3748]">
+                  <Image
+                    src={pokemon.sprites.other?.['official-artwork']?.front_default || pokemon.sprites.front_default || '/placeholder-pokemon.png'}
+                    alt={pokemon.name}
+                    width={350}
+                    height={350}
+                    className="object-contain w-full h-full drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                    priority
+                  />
                 </div>
-
-                {/* Right Column: Basic Info, Types, Weaknesses, Status */}
-                <div className="flex flex-col space-y-8">
-                    <PokemonBasicInfo
-                        height={pokemon.height / 10} // Convert dm to meters
-                        weight={pokemon.weight / 10} // Convert hg to kg
-                        category={category}
-                        abilities={pokemon.abilities}
-                        maleRatio={maleRatio}
-                        femaleRatio={femaleRatio}
-                        baseHappiness={pokemonSpecies?.base_happiness || null} // Assuming base_happiness is relevant
-                    />
-
-                    <PokemonTypes types={pokemon.types} typeColors={typeColors} />
-
-                    <PokemonWeaknesses weaknesses={weaknesses} typeColors={typeColors} />
-
-                    {/* Status (placeholder, will be replaced by PokemonStats) */}
-                    <div className="bg-[#334155] rounded-xl p-6 shadow-lg border border-gray-600">
-                        <h3 className="text-xl font-bold text-gray-100 mb-4">Status</h3>
-                        <PokemonStats stats={pokemon.stats} />
-                    </div>
-                </div>
+              </div>
+              <div className="bg-[#334155] rounded-xl p-6 w-full shadow-lg border border-gray-600 mb-8">
+                <h3 className="text-xl font-bold text-gray-100 mb-3 flex items-center">
+                  Versions
+                  <span className="ml-2 text-blue-400">●</span>
+                  <span className="ml-1 text-green-400">●</span>
+                </h3>
+                <p className="text-gray-300 text-base leading-relaxed">
+                  {flavorText}
+                </p>
+              </div>
+              <div className="bg-[#334155] rounded-xl p-6 w-full shadow-lg border border-gray-600">
+                <h3 className="text-xl font-bold text-gray-100 mb-3">Style</h3>
+                <p className="text-gray-300 text-base">
+                  This Pokémon does not have different form.
+                </p>
+              </div>
             </div>
-
-            {/* Evolution Chain Section */}
-            {evolutionChain && pokemon.sprites.front_default && (
-                <div className="mt-12 bg-[#334155] rounded-xl p-6 shadow-lg border border-gray-600">
-                    <h3 className="text-xl font-bold text-gray-100 mb-6">Evolution</h3>
-                    <PokemonEvolutionChain
-                        evolutionChain={evolutionChain.chain}
-                        currentPokemonId={pokemon.id}
-                    />
-                </div>
-            )}
-
-            {/* Back to Pokedex Button */}
-            <div className="mt-12 text-center">
-                <Link href="/" className="inline-block bg-[#F8A55A] hover:bg-[#E08F45] text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
-                    Back to Pokédex
-                </Link>
+            <div className="flex flex-col space-y-8">
+              <PokemonBasicInfo
+                height={pokemon.height / 10}
+                weight={pokemon.weight / 10}
+                category={category}
+                abilities={pokemon.abilities}
+                maleRatio={maleRatio}
+                femaleRatio={femaleRatio}
+                baseHappiness={pokemonSpecies?.base_happiness || null}
+              />
+              <PokemonTypes types={pokemon.types} typeColors={typeColors} />
+              <PokemonWeaknesses weaknesses={weaknesses} typeColors={typeColors} />
+              <div className="bg-[#334155] rounded-xl p-6 shadow-lg border border-gray-600">
+                <h3 className="text-xl font-bold text-gray-100 mb-4">Status</h3>
+                <PokemonStats stats={pokemon.stats} />
+              </div>
             </div>
+          </div>
+          {evolutionChain && pokemon.sprites.front_default && (
+            <div className="mt-12 bg-[#334155] rounded-xl p-6 shadow-lg border border-gray-600">
+              <h3 className="text-xl font-bold text-gray-100 mb-6">Evolution</h3>
+              <PokemonEvolutionChain
+                evolutionChain={evolutionChain.chain}
+                currentPokemonId={pokemon.id}
+              />
+            </div>
+          )}
+          <div className="mt-12 text-center">
+            <Link href="/" className="inline-block bg-[#F8A55A] hover:bg-[#E08F45] text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+              Back to Pokédex
+            </Link>
+          </div>
         </div>
       </div>
     </div>

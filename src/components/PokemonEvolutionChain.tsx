@@ -46,7 +46,6 @@ async function fetchEvolutionStages(node: EvolutionNode): Promise<{ id: number; 
   return stages.sort((a, b) => a.id - b.id);
 }
 
-// Mapping for type colors (duplicate from page.tsx for self-contained component)
 const typeColors: { [key: string]: string } = {
   normal: 'bg-gray-400',
   fire: 'bg-red-500',
