@@ -48,7 +48,7 @@ export default function CatchPokemonPage() {
   }
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-blue-100 to-cyan-200 py-12">
+    <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-blue-500  to-cyan-100 py-12">
       <h1 className="text-4xl font-bold text-blue-700 mb-4 drop-shadow">Catch Pokémon</h1>
       <p className="text-lg text-gray-700 mb-8">Click a region to catch a random Pokémon from that region!</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-x-4 gap-y-2 justify-items-center mx-auto">
@@ -61,9 +61,9 @@ export default function CatchPokemonPage() {
             onClick={() => handleRegionClick(region)}
             style={{ opacity: loadingRegion && loadingRegion !== region ? 0.5 : 1, pointerEvents: loadingRegion && loadingRegion !== region ? 'none' : 'auto', minHeight: '12rem' }}
           >
-            {/* Circle with pokeball image and overlay */}
+            {/* Circle with region image and overlay */}
             <div className="w-36 h-36 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden border-4 border-blue-300 relative">
-              <img src="/pokeball.png" alt="Pokeball" className="w-28 h-28 object-contain relative z-10 transition-all duration-300 group-hover:scale-105" />
+              <img src={`/regions/${region.toLowerCase()}.png`} alt={region + ' region'} className="w-full h-full object-cover relative z-10 transition-all duration-300 group-hover:scale-105" />
               {/* Dark overlay for non-hovered state */}
               <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-all duration-300 z-20 pointer-events-none" />
               {loadingRegion === region && (
@@ -74,7 +74,7 @@ export default function CatchPokemonPage() {
             </div>
             {/* Region name, absolutely positioned at the bottom of the main div, centered with respect to image */}
             <div
-              className={bangers.className + ' text-[2.2rem] text-blue-900/70 drop-shadow-sm absolute transition-all duration-300 group-hover:text-blue-800 group-hover:text-[2.7rem] group-hover:drop-shadow-lg z-30'}
+              className={bangers.className + ' text-[2.2rem] text-white drop-shadow-sm absolute transition-all duration-300 group-hover:text-white group-hover:text-[2.7rem] group-hover:drop-shadow-lg z-30'}
               style={{
                 bottom: '1.4rem',
                 left: '50%',

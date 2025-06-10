@@ -61,6 +61,9 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
               <div className="font-bold text-lg text-gray-800">{email?.split('@')[0] || 'Trainer'}</div>
               <div className="text-xs text-gray-500 mt-1">{email}</div>
             </div>
+            <button className="mb-2 bg-gray-700 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => { setOpen(false); router.push('/'); }}>
+              Home
+            </button>
             <button className="mb-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => { setOpen(false); router.push('/region'); }}>
               Catch Pokémon
             </button>
