@@ -1,8 +1,7 @@
 // components/PokemonEvolutionChain.tsx
-
+import { EvolutionNode } from '@/types/pokemon';
 import Image from 'next/image';
 import Link from 'next/link';
-import { EvolutionNode } from '@/app/pokemon/[name]/page'; // Import the type
 
 interface PokemonEvolutionChainProps {
   evolutionChain: EvolutionNode;

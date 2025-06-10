@@ -6,40 +6,51 @@ import Image from 'next/image';
 import PokemonCard from '@/components/PokemonCard';
 import CustomSearch from '@/components/CustomSearch';
 
+interface Pokemon {
+  name: string;
+  url: string;
+}
+
 export default function Home() {
   const [pokemonName, setPokemonName] = useState('');
-  const [pokemonList, setPokemonList] = useState<any[]>([]);
+  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>('https://pokeapi.co/api/v2/pokemon?limit=12');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [showCustomSearch, setShowCustomSearch] = useState(false);
 
   const router = useRouter();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (pokemonName.trim()) {
-      router.push(`/pokemon/${pokemonName.toLowerCase()}`);
+    const trimmedName = pokemonName.trim().toLowerCase();
+    if (trimmedName) {
+      router.push(`/pokemon/${trimmedName}`);
     }
   };
 
   const loadPokemons = async () => {
-    if (!nextUrl) return;
+    if (!nextUrl || loading) return;
+
     setLoading(true);
-    const res = await fetch(nextUrl);
-    const data = await res.json();
+    try {
+      const res = await fetch(nextUrl);
+      const data = await res.json();
 
-    setPokemonList((prev) => {
-      const existing = new Set(prev.map((p) => p.name));
-      const newUnique = data.results.filter((p: any) => !existing.has(p.name));
-      return [...prev, ...newUnique];
-    });
+      const existingNames = new Set(pokemonList.map((p) => p.name));
+      const newPokemons = data.results.filter((p: Pokemon) => !existingNames.has(p.name));
 
-    setNextUrl(data.next);
-    setLoading(false);
+      setPokemonList((prev) => [...prev, ...newPokemons]);
+      setNextUrl(data.next);
+    } catch (error) {
+      console.error('Failed to load Pokémons:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadPokemons();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -52,7 +63,6 @@ export default function Home() {
           height={60}
           className="animate-bounce mx-auto mt-4"
         />
-
         <h1 className="text-4xl font-bold text-center mb-6">Pokémon Search</h1>
 
         <form onSubmit={handleSearch} className="flex gap-4 items-center justify-center mb-4">
@@ -81,19 +91,20 @@ export default function Home() {
 
       {showCustomSearch && (
         <div className="mb-8">
-          <CustomSearch onSearchResults={(results) => setPokemonList(results)} />
+          <CustomSearch onSearchResults={setPokemonList} />
         </div>
       )}
 
-      {/* Pokémon List */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-6xl">
-        {(loading && pokemonList.length === 0
-          ? Array.from({ length: 12 }).map((_, idx) => (
-              <PokemonCard key={idx} loading />
-            ))
+        {loading && pokemonList.length === 0
+          ? Array.from({ length: 12 }).map((_, idx) => <PokemonCard key={idx} />)
           : pokemonList.map((pokemon) => (
-              <PokemonCard key={pokemon.name} name={pokemon.name} url={pokemon.url || `https://pokeapi.co/api/v2/pokemon/${pokemon.name}`} />
-            )))}
+              <PokemonCard
+                key={pokemon.name}
+                name={pokemon.name}
+                url={pokemon.url || `https://pokeapi.co/api/v2/pokemon/${pokemon.name}`}
+              />
+            ))}
       </div>
 
       {nextUrl && (

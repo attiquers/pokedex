@@ -1,12 +1,13 @@
 // components/PokemonBasicInfo.tsx
 
-import { PokemonData } from '@/app/pokemon/[name]/page'; // Import the type
+import { Ability } from '@/types/pokemon';
+
 
 interface PokemonBasicInfoProps {
   height: number; // in meters
   weight: number; // in kilograms
   category: string;
-  abilities: PokemonData['abilities'];
+  abilities: Ability[]; // ✅ Use Ability[] directly
   maleRatio: number | null;
   femaleRatio: number | null;
   baseHappiness: number | null; // Added based on typical Pokemon info

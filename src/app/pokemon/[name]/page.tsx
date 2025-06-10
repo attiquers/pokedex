@@ -3,6 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { EvolutionNode, Type } from '@/types/pokemon';
+
+import { PokemonData } from '@/types/pokemon';
 
 // Import our custom components
 import PokemonHeader from '@/components/PokemonHeader';
@@ -13,53 +16,10 @@ import PokemonWeaknesses from '@/components/PokemonWeaknesses';
 import PokemonEvolutionChain from '@/components/PokemonEvolutionChain';
 
 // --- Type Definitions (as provided by user, ensure consistency) ---
-interface Ability {
-  ability: { name: string; url: string };
-  is_hidden: boolean;
-  slot: number;
-}
 
-interface Type {
-  slot: number;
-  type: { name: string; url: string };
-}
 
-interface Stat {
-  base_stat: number;
-  effort: number;
-  stat: { name: string; url: string };
-}
 
-interface SpriteOther {
-  'official-artwork'?: { front_default: string | null; front_shiny: string | null };
-  home?: { front_default: string | null; front_shiny: string | null };
-  dream_world?: { front_default: string | null };
-}
 
-interface Sprites {
-  front_default: string | null;
-  other: SpriteOther;
-}
-
-interface Cries {
-  latest: string | null;
-  legacy: string | null;
-}
-
-export interface PokemonData {
-  abilities: Ability[];
-  base_experience: number;
-  cries: Cries;
-  forms: { name: string; url: string }[];
-  height: number; // decimetres (1/10th of a meter)
-  id: number;
-  name: string;
-  species: { name: string; url: string };
-  sprites: Sprites;
-  stats: Stat[];
-  types: Type[];
-  weight: number; // hectograms (1/10th of a kilogram)
-}
 
 export interface PokemonSpeciesData {
   base_happiness: number;
@@ -82,8 +42,8 @@ export interface PokemonSpeciesData {
   is_mythical: boolean;
   name: string;
   order: number;
-  pal_park_encounters: any[];
-  pokedex_numbers: any[];
+  pal_park_encounters: unknown[];
+  pokedex_numbers: unknown[];
   shape: { name: string; url: string } | null;
   varieties: { is_default: boolean; pokemon: { name: string; url: string } }[];
 }
@@ -92,13 +52,6 @@ export interface EvolutionChainData {
   baby_trigger_item: { name: string; url: string } | null;
   chain: EvolutionNode;
   id: number;
-}
-
-export interface EvolutionNode {
-  evolution_details: any[];
-  evolves_to: EvolutionNode[];
-  is_baby: boolean;
-  species: { name: string; url: string };
 }
 
 // --- Data Fetching Functions ---
@@ -164,13 +117,6 @@ function getAdjacentPokemonIds(currentId: number): { prevId: number | null; next
   const nextId = currentId < 1025 ? currentId + 1 : null; // As of latest API updates, there are more than 1025. This is a simplification.
   return { prevId, nextId };
 }
-
-// Helper to format ID with leading zeros
-const formatPokemonId = (id: number | null): string => {
-  if (id === null) return '000'; // Or handle as needed for non-existent IDs
-  return String(id).padStart(4, '0');
-};
-
 
 // Mapping for type colors (you might want to put this in a separate utility or Tailwind config)
 const typeColors: { [key: string]: string } = {
@@ -274,13 +220,17 @@ const getWeaknesses = (types: Type[]) => {
   return Array.from(weaknessesSet);
 };
 
+interface PageProps {
+  params: {
+    name: string; // Dynamic route parameters are always strings
+  };
+}
 
-export default async function PokemonDetail({ params }: { params: { name: string } }) {
-  const pokemon = await getPokemonData(params.name);
+export default async function PokemonDetail({ params }: PageProps) {
+  const pokemonName = params.name; // 'pokemonName' will be a string like "pikachu"
+  const pokemon = await getPokemonData(pokemonName);
 
-  if (!pokemon) {
-    notFound(); // Use Next.js notFound to render a 404 page
-  }
+  if (!pokemon) return notFound();
 
   const pokemonSpecies = await getPokemonSpeciesData(pokemon.species.url);
   let evolutionChain: EvolutionChainData | null = null;
@@ -310,23 +260,7 @@ export default async function PokemonDetail({ params }: { params: { name: string
     // Main container to mimic the dark background and overall structure
     <div className="min-h-screen bg-[#1F2937] text-white font-sans flex flex-col items-center py-10 px-4">
       <div className="w-full max-w-7xl">
-        {/* Top Header (Pokedex Title and Navigation) */}
-        <div className="relative bg-[#334155] rounded-xl p-4 mb-8 shadow-lg border border-gray-600 flex items-center justify-between">
-            {prevId && (
-                <Link href={`/pokemon/${prevId}`} className="flex items-center text-gray-300 hover:text-white transition-colors duration-200">
-                    <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
-                    <span className="hidden sm:inline">000{prevId} {pokemon.name}</span> {/* Placeholder, ideally fetch prev name */}
-                </Link>
-            )}
-            <h1 className="text-3xl font-bold text-center flex-grow">Pokedex</h1>
-            {nextId && (
-                <Link href={`/pokemon/${nextId}`} className="flex items-center text-gray-300 hover:text-white transition-colors duration-200">
-                    <span className="hidden sm:inline">000{nextId} {pokemon.name}</span> {/* Placeholder, ideally fetch next name */}
-                    <svg className="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-                </Link>
-            )}
-        </div>
-
+   
         {/* Main Content Area */}
         <div className="bg-[#2D3748] rounded-2xl shadow-2xl max-w-6xl w-full mx-auto p-8 lg:p-12 border border-[#4B5563]">
             <PokemonHeader

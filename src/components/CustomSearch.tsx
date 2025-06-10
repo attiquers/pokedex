@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 interface CustomSearchProps {
-  onSearchResults: (results: any[]) => void;
+  onSearchResults: (results: unknown[]) => void;
 }
 
 export default function CustomSearch({ onSearchResults }: CustomSearchProps) {
@@ -28,9 +28,9 @@ export default function CustomSearch({ onSearchResults }: CustomSearchProps) {
       const abilitiesData = await abilityRes.json();
       const regionsData = await regionRes.json();
 
-      setTypes(typesData.results.map((t: any) => t.name));
-      setAbilities(abilitiesData.results.map((a: any) => a.name));
-      setRegions(regionsData.results.map((r: any) => r.name));
+      setTypes(typesData.results.map((t: unknown) => (t as any).name));
+      setAbilities(abilitiesData.results.map((a: unknown) => (a as any).name));
+      setRegions(regionsData.results.map((r: unknown) => (r as any).name));
     };
 
     loadDropdownData();
@@ -42,16 +42,16 @@ export default function CustomSearch({ onSearchResults }: CustomSearchProps) {
     if (selectedType) {
       const res = await fetch(`https://pokeapi.co/api/v2/type/${selectedType}`);
       const data = await res.json();
-      data.pokemon.forEach((p: any) => resultSet.add(p.pokemon.name));
+      data.pokemon.forEach((p: unknown) => resultSet.add((p as any).pokemon.name));
     }
 
     if (selectedAbility) {
       const res = await fetch(`https://pokeapi.co/api/v2/ability/${selectedAbility}`);
       const data = await res.json();
       const newSet = new Set<string>();
-      data.pokemon.forEach((p: any) => {
-        if (!selectedType || resultSet.has(p.pokemon.name)) {
-          newSet.add(p.pokemon.name);
+      data.pokemon.forEach((p: unknown) => {
+        if (!selectedType || resultSet.has((p as any).pokemon.name)) {
+          newSet.add((p as any).pokemon.name);
         }
       });
       resultSet = newSet;

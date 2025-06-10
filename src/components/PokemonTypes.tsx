@@ -1,6 +1,6 @@
 // components/PokemonTypes.tsx
 
-import { Type } from '@/app/pokemon/[name]/page'; // Import the type
+import { Type } from '@/types/pokemon'; // ✅ Safe import
 
 interface PokemonTypesProps {
   types: Type[];

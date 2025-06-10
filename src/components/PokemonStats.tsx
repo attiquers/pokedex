@@ -1,6 +1,6 @@
 // components/PokemonStats.tsx
 
-import { PokemonData } from '@/app/pokemon/[name]/page'; // Import the type
+import { PokemonData } from '@/types/pokemon';
 
 interface PokemonStatsProps {
   stats: PokemonData['stats'];
