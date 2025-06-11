@@ -30,9 +30,14 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{
+          background: "var(--background)",
+          color: "var(--foreground)",
+          minHeight: "100vh",
+        }}
       >
         <AuthGlobalUI />
-        {children}
+        <div className="poke-theme-bg min-h-screen">{children}</div>
       </body>
     </html>
   );

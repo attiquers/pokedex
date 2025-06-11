@@ -42,10 +42,10 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
             aria-label="Close user sidebar"
           />
           {/* Sidebar */}
-          <div className="fixed top-0 right-0 h-full w-72 max-w-full z-50 bg-white shadow-2xl p-6 flex flex-col border-l border-gray-200 animate-slideInRight">
+          <div className="fixed top-0 right-0 h-full w-72 max-w-full z-50 poke-sidebar shadow-2xl p-6 flex flex-col border-l border-gray-200 animate-slideInRight">
             {/* Close (X) button */}
             <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none"
+              className="absolute top-4 right-4 text-2xl font-bold focus:outline-none text-yellow-400 hover:text-yellow-300"
               onClick={() => setOpen(false)}
               aria-label="Close sidebar"
               type="button"
@@ -56,29 +56,29 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
               <img
                 src={avatarUrl}
                 alt="Profile"
-                className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover mb-2"
+                className="w-16 h-16 rounded-full border-4 border-yellow-400 object-cover mb-2 bg-white"
               />
-              <div className="font-bold text-lg text-gray-800">{email?.split('@')[0] || 'Trainer'}</div>
-              <div className="text-xs text-gray-500 mt-1">{email}</div>
+              <div className="font-bold text-lg text-yellow-300">{email?.split('@')[0] || 'Trainer'}</div>
+              <div className="text-xs text-yellow-200 mt-1">{email}</div>
             </div>
-            <button className="mb-2 bg-gray-700 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => { setOpen(false); router.push('/'); }}>
+            <button className="mb-2 poke-btn" style={{background:'var(--poke-blue)'}} onClick={() => { setOpen(false); router.push('/'); }}>
               Home
             </button>
-            <button className="mb-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => { setOpen(false); router.push('/region'); }}>
+            <button className="mb-2 poke-btn" style={{background:'var(--poke-green)'}} onClick={() => { setOpen(false); router.push('/region'); }}>
               Catch Pokémon
             </button>
-            <button className="mb-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => {/* TODO: my pokemons action */}}>
+            <button className="mb-2 poke-btn" style={{background:'var(--poke-red)'}} onClick={() => { setOpen(false); router.push('/mypokemons'); }}>
               My Pokémons
             </button>
-            <button className="mb-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => {/* TODO: resources action */}}>
+            <button className="mb-2 poke-btn" style={{background:'var(--poke-yellow)', color:'var(--poke-black)'}} onClick={() => {/* TODO: resources action */}}>
               Resources
             </button>
-            <button className="mb-6 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded shadow transition sidebar-action-btn" onClick={() => {/* TODO: quiz action */}}>
+            <button className="mb-6 poke-btn" style={{background:'var(--poke-black)'}} onClick={() => {/* TODO: quiz action */}}>
               Quiz
             </button>
             <button
               onClick={handleLogout}
-              className="mt-auto bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow"
+              className="mt-auto poke-btn" style={{background:'var(--poke-gray)'}}
             >
               Log Out
             </button>

@@ -109,32 +109,32 @@ export default function Page({ searchParams }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-cyan-200 py-12 px-4">
-      <h1 className="text-4xl font-bold text-center text-blue-700 mb-8 drop-shadow">Pokémon Comparison</h1>
+    <div className="min-h-screen bg-gradient-to-br from-[var(--poke-blue)] to-[var(--poke-accent)] py-12 px-4">
+      <h1 className="text-4xl font-bold text-center text-[var(--poke-blue)] mb-8 drop-shadow">Pokémon Comparison</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Wild Pokémon */}
-        <div className="bg-white p-6 rounded-2xl shadow-xl">
+        <div className="poke-card p-6 rounded-2xl shadow-xl">
           {wildData ? (
             <>
-              <h2 className="text-2xl font-semibold text-red-700 mb-2">Wild Pokémon: {wildData.name}</h2>
+              <h2 className="text-2xl font-semibold text-[var(--poke-red)] mb-2">Wild Pokémon: {wildData.name}</h2>
               <img src={wildData.image} alt={wildData.name} className="w-48 h-48 object-contain mb-4 mx-auto" />
               <p className="text-gray-700 mb-2">Types: {wildData.types.join(', ')}</p>
               <p className="text-gray-700 mb-2">Abilities: {wildData.abilities.join(', ')}</p>
               <p className="text-gray-700 mb-2">Stat Score: {wildData.score.toFixed(2)}</p>
               <div className="mt-2">
-                <h3 className="font-medium text-gray-800 mb-1">Base Stats:</h3>
-                <ul className="text-gray-600">
+                <h3 className="font-medium text-[var(--poke-black)] mb-1">Base Stats:</h3>
+                <ul className="text-[var(--poke-gray)]">
                   {wildData.stats.map((stat) => (
                     <li key={stat.name}>{stat.name}: {stat.value}</li>
                   ))}
                 </ul>
               </div>
               <div className="mt-2">
-                <h3 className="font-medium text-gray-800 mb-1">Moveset:</h3>
-                <ul className="text-gray-600">
+                <h3 className="font-medium text-[var(--poke-black)] mb-1">Moveset:</h3>
+                <ul className="text-[var(--poke-gray)]">
                   {wildData.moves.map((move) => (
-                    <li key={move.name} className="text-gray-600 capitalize">
-                      {move.name} {move.type && <span className="text-xs text-blue-700">[{move.type}]</span>} {move.power !== null && <span className="text-xs text-red-700">Power: {move.power}</span>}
+                    <li key={move.name} className="capitalize">
+                      {move.name} {move.type && <span className="text-xs text-[var(--poke-blue)]">[{move.type}]</span>} {move.power !== null && <span className="text-xs text-[var(--poke-red)]">Power: {move.power}</span>}
                     </li>
                   ))}
                 </ul>
@@ -146,28 +146,28 @@ export default function Page({ searchParams }) {
         </div>
 
         {/* User Pokémon */}
-        <div className="bg-white p-6 rounded-2xl shadow-xl">
+        <div className="poke-card p-6 rounded-2xl shadow-xl">
           {userData ? (
             <>
-              <h2 className="text-2xl font-semibold text-green-700 mb-2">Your Pokémon: {userData.name}</h2>
+              <h2 className="text-2xl font-semibold text-[var(--poke-green)] mb-2">Your Pokémon: {userData.name}</h2>
               <img src={userData.image} alt={userData.name} className="w-48 h-48 object-contain mb-4 mx-auto" />
               <p className="text-gray-700 mb-2">Types: {userData.types.join(', ')}</p>
               <p className="text-gray-700 mb-2">Abilities: {userData.abilities.join(', ')}</p>
               <p className="text-gray-700 mb-2">Stat Score: {userData.score.toFixed(2)}</p>
               <div className="mt-2">
-                <h3 className="font-medium text-gray-800 mb-1">Base Stats:</h3>
-                <ul className="text-gray-600">
+                <h3 className="font-medium text-[var(--poke-black)] mb-1">Base Stats:</h3>
+                <ul className="text-[var(--poke-gray)]">
                   {userData.stats.map((stat) => (
                     <li key={stat.name}>{stat.name}: {stat.value}</li>
                   ))}
                 </ul>
               </div>
               <div className="mt-2">
-                <h3 className="font-medium text-gray-800 mb-1">Moveset:</h3>
-                <ul className="text-gray-600">
+                <h3 className="font-medium text-[var(--poke-black)] mb-1">Moveset:</h3>
+                <ul className="text-[var(--poke-gray)]">
                   {userData.moves.map((move) => (
-                    <li key={move.name} className="text-gray-600 capitalize">
-                      {move.name} {move.type && <span className="text-xs text-blue-700">[{move.type}]</span>} {move.power !== null && <span className="text-xs text-red-700">Power: {move.power}</span>}
+                    <li key={move.name} className="capitalize">
+                      {move.name} {move.type && <span className="text-xs text-[var(--poke-blue)]">[{move.type}]</span>} {move.power !== null && <span className="text-xs text-[var(--poke-red)]">Power: {move.power}</span>}
                     </li>
                   ))}
                 </ul>
@@ -183,7 +183,7 @@ export default function Page({ searchParams }) {
             <>🏆 Winner: {expertWinner}</>
           ) : (
             <button
-              className="px-8 py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold shadow-lg hover:from-yellow-500 hover:to-orange-600 transition"
+              className="poke-btn px-8 py-3 rounded-xl"
               onClick={handleBattle}
               disabled={loading}
             >
