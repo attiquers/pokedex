@@ -15,6 +15,7 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
+  const [usedQuestions, setUsedQuestions] = useState<Set<string>>(new Set());
   const MAX_QUESTIONS = 5;
 
   // Fetch user id from supabase on mount
@@ -41,17 +42,23 @@ export default function QuizPage() {
     setSelected(null);
     setFeedback(null);
     console.log("Fetching quiz question for difficulty:", diff);
+
+    // Pass used questions to backend to avoid repeats
+    const usedArr = Array.from(usedQuestions);
+    const usedParam = usedArr.length > 0 ? `&used=${encodeURIComponent(usedArr.join("|||"))}` : "";
     try {
-      const res = await fetch(`/api/quiz?difficulty=${diff}`);
+      const res = await fetch(`/api/quiz?difficulty=${diff}${usedParam}&t=${Date.now()}`);
       console.log("API response status:", res.status);
       if (res.ok) {
         const data = await res.json();
         console.log("Quiz data received:", data);
+        const questionKey = (data.question || "").trim();
         setQuiz({
           question: data.question,
           choices: data.choices,
           correct: data.correct,
         });
+        setUsedQuestions(prev => new Set(prev).add(questionKey));
       } else {
         console.error("Quiz API error:", res.statusText);
       }
@@ -106,6 +113,7 @@ export default function QuizPage() {
       setQuiz(null);
       setFeedback(null);
       setQuestionCount(0);
+      setUsedQuestions(new Set());
     } else {
       setQuestionCount((c) => c + 1);
       if (difficulty) fetchQuiz(difficulty);
@@ -172,7 +180,7 @@ export default function QuizPage() {
           <div className="mb-2 text-gray-700 font-semibold">
             Question {questionCount + 1} of {MAX_QUESTIONS}
           </div>
-          {loading && <div className="text-center">Loading question...</div>}
+          {loading && <div className="text-center text-black">Loading question...</div>}
           {quiz && (
             <div className="w-full bg-white rounded-2xl shadow-lg p-4 flex flex-col items-center">
               <div className="text-lg font-semibold text-center text-black mb-2">
