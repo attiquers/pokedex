@@ -28,6 +28,21 @@ function calculateStatScore(stats) {
   }, 0);
 }
 
+// Helper to fetch weaknesses for a list of types
+async function fetchWeaknesses(types: string[]) {
+  const weaknesses: string[] = [];
+  for (const type of types) {
+    const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
+    if (res.ok) {
+      const typeData = await res.json();
+      typeData.damage_relations.double_damage_from.forEach((w: any) => {
+        if (!weaknesses.includes(w.name)) weaknesses.push(w.name);
+      });
+    }
+  }
+  return weaknesses;
+}
+
 export default function Page({ searchParams }) {
   // Fix searchParams usage for Next.js 15 client components
   const params = React.use(searchParams) as Record<string, string>;
@@ -139,14 +154,70 @@ export default function Page({ searchParams }) {
     fetchUserAndPokemons();
   }, []);
 
+  // Add weaknesses to wildData and userData after fetching
+  useEffect(() => {
+    async function addWeaknesses() {
+      if (wildData && !wildData.weaknesses) {
+        const weaknesses = await fetchWeaknesses(wildData.types);
+        setWildData((prev: any) => ({ ...prev, weaknesses }));
+      }
+      if (userData && !userData.weaknesses) {
+        const weaknesses = await fetchWeaknesses(userData.types);
+        setUserData((prev: any) => ({ ...prev, weaknesses }));
+      }
+    }
+    addWeaknesses();
+  }, [wildData, userData]);
+
+  // Add weaknesses to selectedUserPokemon if not already present
+  useEffect(() => {
+    async function addSelectedUserPokemonWeaknesses() {
+      if (
+        selectedUserPokemon &&
+        !selectedUserPokemon.weaknesses &&
+        selectedUserPokemon.types
+      ) {
+        const weaknesses = await fetchWeaknesses(selectedUserPokemon.types);
+        setSelectedUserPokemon((prev: any) => ({ ...prev, weaknesses }));
+      }
+    }
+    addSelectedUserPokemonWeaknesses();
+  }, [selectedUserPokemon]);
+
   async function handleBattle() {
     setLoading(true);
     setExpertWinner(null);
     try {
+      // Pass all possible data for both wild and user Pokémon
       const res = await fetch("/api/battle", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wildData, userData: selectedUserPokemon })
+        body: JSON.stringify({
+          wildData: {
+            ...wildData,
+            types: wildData?.types || [],
+            abilities: wildData?.abilities || [],
+            weaknesses: wildData?.weaknesses || [],
+            stats: wildData?.stats || [],
+            moves: wildData?.moves || [],
+            strengths: wildData?.strengths || [], // if you have strengths, pass them too
+            score: wildData?.score,
+            id: wildData?.id,
+            image: wildData?.image,
+          },
+          userData: {
+            ...selectedUserPokemon,
+            types: selectedUserPokemon?.types || [],
+            abilities: selectedUserPokemon?.abilities || [],
+            weaknesses: selectedUserPokemon?.weaknesses || [],
+            stats: selectedUserPokemon?.stats || [],
+            moves: selectedUserPokemon?.moves || [],
+            strengths: selectedUserPokemon?.strengths || [],
+            score: selectedUserPokemon?.score,
+            id: selectedUserPokemon?.id,
+            image: selectedUserPokemon?.image,
+          }
+        })
       });
       const data = await res.json();
       setExpertWinner(data.winner || 'Error');
@@ -219,6 +290,21 @@ export default function Page({ searchParams }) {
                 {wildData.abilities.map((ab) => (
                   <span key={ab} className="px-2 py-1 rounded bg-[var(--poke-blue)] text-white text-xs font-semibold shadow">{ab}</span>
                 ))}
+              </div>
+              {/* Weaknesses BELOW strengths */}
+              <div className="flex flex-wrap justify-center gap-2 mb-4">
+                {wildData.weaknesses && wildData.weaknesses.length > 0 && (
+                  <>
+                    {wildData.weaknesses.map((weak: string) => (
+                      <span
+                        key={weak}
+                        className="px-2 py-1 rounded bg-[var(--poke-red)] text-white text-xs font-semibold shadow border border-red-800"
+                      >
+                        {weak}
+                      </span>
+                    ))}
+                  </>
+                )}
               </div>
               <div className="w-full mb-4">
                 <h3 className="font-bold text-[var(--poke-blue)] mb-1 text-center">Base Stats</h3>
@@ -321,20 +407,31 @@ export default function Page({ searchParams }) {
                     <img src={selectedUserPokemon.image} alt={selectedUserPokemon.nickname} className="w-32 h-32 object-contain" />
                   </div>
                   <h2 className="mt-28 text-2xl font-extrabold text-[var(--poke-blue)] tracking-wide uppercase mb-2 text-center">{selectedUserPokemon.nickname}</h2>
-                  {selectedUserPokemon && selectedUserPokemon.types && (
-                    <div className="flex flex-wrap justify-center gap-2 mb-4">
-                      {selectedUserPokemon.types.map((type: string) => (
-                        <span key={type} className="px-3 py-1 rounded-full bg-[var(--poke-accent)] text-[var(--poke-blue)] font-bold text-xs uppercase shadow">{type}</span>
-                      ))}
-                    </div>
-                  )}
-                  {selectedUserPokemon && selectedUserPokemon.abilities && (
-                    <div className="flex flex-wrap justify-center gap-2 mb-4">
-                      {selectedUserPokemon.abilities.map((ab: string) => (
-                        <span key={ab} className="px-2 py-1 rounded bg-[var(--poke-blue)] text-white text-xs font-semibold shadow">{ab}</span>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex flex-wrap justify-center gap-2 mb-4">
+                    {selectedUserPokemon.types && selectedUserPokemon.types.map((type: string) => (
+                      <span key={type} className="px-3 py-1 rounded-full bg-[var(--poke-accent)] text-[var(--poke-blue)] font-bold text-xs uppercase shadow">{type}</span>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-2 mb-4">
+                    {selectedUserPokemon.abilities && selectedUserPokemon.abilities.map((ab: string) => (
+                      <span key={ab} className="px-2 py-1 rounded bg-[var(--poke-blue)] text-white text-xs font-semibold shadow">{ab}</span>
+                    ))}
+                  </div>
+                  {/* Weaknesses BELOW strengths */}
+                  <div className="flex flex-wrap justify-center gap-2 mb-4">
+                    {selectedUserPokemon.weaknesses && selectedUserPokemon.weaknesses.length > 0 && (
+                      <>
+                        {selectedUserPokemon.weaknesses.map((weak: string) => (
+                          <span
+                            key={weak}
+                            className="px-2 py-1 rounded bg-[var(--poke-red)] text-white text-xs font-semibold shadow border border-red-800"
+                          >
+                            {weak}
+                          </span>
+                        ))}
+                      </>
+                    )}
+                  </div>
                   {selectedUserPokemon && selectedUserPokemon.stats && (
                     <div className="w-full mb-4">
                       <h3 className="font-bold text-[var(--poke-blue)] mb-1 text-center">Base Stats</h3>

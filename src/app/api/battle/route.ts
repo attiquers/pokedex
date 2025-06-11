@@ -20,13 +20,17 @@ export async function POST(req: NextRequest) {
         .map((m) => `${m.name} [${m.type}] (Power: ${m.power})`)
         .join(", ");
 
-    const wildMoves = formatTopMoves(wildData.moves);
-    const userMoves = formatTopMoves(userData.moves);
+    // Helper to format arrays for prompt
+    const formatArr = (arr: any[] | undefined) =>
+      arr && arr.length > 0 ? arr.join(", ") : "none";
+
+    const wildMoves = formatTopMoves(wildData.moves || []);
+    const userMoves = formatTopMoves(userData.moves || []);
 
     const prompt = `
 You are a Pokemon Battle Expert.
 
-Evaluate two Pokemon in a 1v1 battle. Consider their base stats, types, abilities, and their top 3 most powerful moves.
+Evaluate two Pokemon in a 1v1 battle. Consider their base stats, types, abilities, weaknesses, strengths, and their top 3 most powerful moves.
 
 Return only the winner's name in lowercase, or "tie" if it's an even match.
 Do not explain. Respond with a single word only.
@@ -36,12 +40,16 @@ Examples:
 Pokemon 1: charmander
 Types: fire
 Abilities: blaze
+Weaknesses: water, ground, rock
+Strengths: grass, bug, ice, steel
 Stats: hp: 39, attack: 52, defense: 43, special-attack: 60, special-defense: 50, speed: 65
 Moves: ember [fire] (Power: 40), scratch [normal] (Power: 40), growl [normal]
 
 Pokemon 2: squirtle
 Types: water
 Abilities: torrent
+Weaknesses: electric, grass
+Strengths: fire, ground, rock
 Stats: hp: 44, attack: 48, defense: 65, special-attack: 50, special-defense: 64, speed: 43
 Moves: water gun [water] (Power: 40), tackle [normal] (Power: 40), tail whip [normal]
 
@@ -49,15 +57,19 @@ Answer: squirtle
 
 ---
 Pokemon 1: ${wildData.name}
-Types: ${wildData.types.join(", ")}
-Abilities: ${wildData.abilities.join(", ")}
-Stats: ${wildData.stats.map((s: any) => `${s.name}: ${s.value}`).join(", ")}
+Types: ${formatArr(wildData.types)}
+Abilities: ${formatArr(wildData.abilities)}
+Weaknesses: ${formatArr(wildData.weaknesses)}
+Strengths: ${formatArr(wildData.strengths)}
+Stats: ${wildData.stats?.map((s: any) => `${s.name}: ${s.value}`).join(", ")}
 Moves: ${wildMoves}
 
 Pokemon 2: ${userData.name}
-Types: ${userData.types.join(", ")}
-Abilities: ${userData.abilities.join(", ")}
-Stats: ${userData.stats.map((s: any) => `${s.name}: ${s.value}`).join(", ")}
+Types: ${formatArr(userData.types)}
+Abilities: ${formatArr(userData.abilities)}
+Weaknesses: ${formatArr(userData.weaknesses)}
+Strengths: ${formatArr(userData.strengths)}
+Stats: ${userData.stats?.map((s: any) => `${s.name}: ${s.value}`).join(", ")}
 Moves: ${userMoves}
 
 Answer:
@@ -77,7 +89,7 @@ Answer:
         },
         { role: "user", content: prompt },
       ],
-      max_tokens: 100000,
+      max_tokens: 140000,
       temperature: 0.2,
     });
 
