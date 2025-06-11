@@ -55,6 +55,9 @@ export default function Page({ searchParams }) {
   const [selectedUserPokemon, setSelectedUserPokemon] = useState<any | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loadingUserPokes, setLoadingUserPokes] = useState(true);
+  const [showNicknameDialog, setShowNicknameDialog] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState('');
+  const [pendingWildPokemon, setPendingWildPokemon] = useState<any>(null);
 
   useEffect(() => {
     async function fetchPokemon() {
@@ -145,8 +148,8 @@ export default function Page({ searchParams }) {
           .eq('user_id', userData.user.id);
         if (!error && data) {
           setUserPokemons(data);
-          // Default to first pokemon if none selected
-          setSelectedUserPokemon(data[0] || null);
+          // Do NOT select a default Pokémon here!
+          // setSelectedUserPokemon(data[0] || null); <-- REMOVE THIS LINE
         }
       }
       setLoadingUserPokes(false);
@@ -200,7 +203,7 @@ export default function Page({ searchParams }) {
             weaknesses: wildData?.weaknesses || [],
             stats: wildData?.stats || [],
             moves: wildData?.moves || [],
-            strengths: wildData?.strengths || [], // if you have strengths, pass them too
+            strengths: wildData?.strengths || [],
             score: wildData?.score,
             id: wildData?.id,
             image: wildData?.image,
@@ -221,7 +224,7 @@ export default function Page({ searchParams }) {
       });
       const data = await res.json();
       setExpertWinner(data.winner || 'Error');
-      // If user wins, add wild pokemon to user_pokemons
+      // If user wins, show nickname dialog
       if (
         data.winner &&
         selectedUserPokemon &&
@@ -229,44 +232,54 @@ export default function Page({ searchParams }) {
         data.winner.toLowerCase() === selectedUserPokemon.name?.toLowerCase() &&
         wildData
       ) {
-        // Insert wild pokemon into user_pokemons
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        if (supabaseUrl && supabaseAnonKey) {
-          const { createClient } = await import('@supabase/supabase-js');
-          const supabase = createClient(supabaseUrl, supabaseAnonKey);
-          // Check if already owned
-          const wildId = wildData.id || (wildData.pokemon_id ? wildData.pokemon_id : null);
-          if (!wildId) {
-            console.log('Wild Pokémon missing id:', wildData);
-          }
-          const { data: existing, error: checkError } = await supabase
-            .from('user_pokemons')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('pokemon_id', wildId);
-          console.log('Check existing user_pokemons:', existing, checkError);
-          if (!existing || existing.length === 0) {
-            const { error: insertError, data: insertData } = await supabase.from('user_pokemons').insert({
-              user_id: user.id,
-              pokemon_id: wildId,
-              nickname: wildData.name,
-            });
-            console.log('Insert user_pokemons:', insertData, insertError);
-            // Optionally, refresh userPokemons
-            const { data: updated, error: refreshError } = await supabase
-              .from('user_pokemons')
-              .select('pokemon_id, nickname')
-              .eq('user_id', user.id);
-            if (updated) setUserPokemons(updated);
-            if (refreshError) console.log('Refresh user_pokemons error:', refreshError);
-          }
-        }
+        setPendingWildPokemon(wildData);
+        setNicknameInput(wildData.name);
+        setShowNicknameDialog(true);
       }
     } catch (e) {
       setExpertWinner('Error');
     }
     setLoading(false);
+  }
+
+  // Handle nickname dialog submit
+  async function handleNicknameSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pendingWildPokemon || !user) return;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseAnonKey) {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      const wildId = pendingWildPokemon.id || (pendingWildPokemon.pokemon_id ? pendingWildPokemon.pokemon_id : null);
+      if (!wildId) {
+        console.log('Wild Pokémon missing id:', pendingWildPokemon);
+      }
+      // The following `if` block was removed to allow multiple identical pokemons
+      // const { data: existing, error: checkError } = await supabase
+      //   .from('user_pokemons')
+      //   .select('id')
+      //   .eq('user_id', user.id)
+      //   .eq('pokemon_id', wildId);
+      // if (!existing || existing.length === 0) {
+        const { error: insertError, data: insertData } = await supabase.from('user_pokemons').insert({
+          user_id: user.id,
+          pokemon_id: wildId,
+          nickname: nicknameInput || pendingWildPokemon.name,
+        });
+        console.log('Insert user_pokemons:', insertData, insertError);
+        // Optionally, refresh userPokemons
+        const { data: updated, error: refreshError } = await supabase
+          .from('user_pokemons')
+          .select('pokemon_id, nickname')
+          .eq('user_id', user.id);
+        if (updated) setUserPokemons(updated);
+        if (refreshError) console.log('Refresh user_pokemons error:', refreshError);
+      // }
+    }
+    setShowNicknameDialog(false);
+    setPendingWildPokemon(null);
+    setNicknameInput('');
   }
 
   return (
@@ -347,53 +360,59 @@ export default function Page({ searchParams }) {
             <div className="text-center text-[var(--poke-red)]">You have no Pokémon yet.</div>
           ) : (
             <>
+              {/* Always show the list to choose from */}
               {!selectedUserPokemon && (
-                <div className="flex flex-wrap justify-center gap-6 mb-6">
-                  {userPokemons.map((poke) => (
-                    <div
-                      key={poke.pokemon_id}
-                      className={`flex flex-col items-center cursor-pointer transition-transform hover:scale-105`}
-                      onClick={async () => {
-                        // Fetch full info for selected pokemon
-                        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${poke.pokemon_id}`);
-                        if (res.ok) {
-                          const data = await res.json();
-                          const types = data.types.map((t: any) => t.type.name);
-                          const abilities = data.abilities.map((a: any) => a.ability.name);
-                          const stats = data.stats.map((s: any) => ({ name: s.stat.name, value: s.base_stat }));
-                          const moveData = await Promise.all(
-                            data.moves.slice(0, 10).map(async (m: any) => {
-                              const res = await fetch(m.move.url);
-                              if (!res.ok) return { name: m.move.name, power: null, type: '' };
-                              const moveInfo = await res.json();
-                              return {
-                                name: moveInfo.name,
-                                power: moveInfo.power,
-                                type: moveInfo.type?.name || '',
-                              };
-                            })
-                          );
-                          setSelectedUserPokemon({
-                            ...poke,
-                            name: data.name,
-                            types,
-                            abilities,
-                            stats,
-                            moves: moveData,
-                            image: data.sprites.other['official-artwork'].front_default,
-                            score: calculateStatScore(stats),
-                            id: data.id, // Ensure ID is included here as well
-                          });
-                        }
-                      }}
-                    >
-                      <div className="w-24 h-24 rounded-full bg-[var(--poke-blue)] flex items-center justify-center shadow-lg border-4 border-white mb-2">
-                        <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${poke.pokemon_id}.png`} alt={poke.nickname} className="w-20 h-20 object-contain" />
+                <>
+                  <h3 className="text-xl font-bold text-[var(--poke-blue)] mb-4 text-center w-full">
+                    Choose your Pokémon
+                  </h3>
+                  <div className="flex flex-wrap justify-center gap-6 mb-6">
+                    {userPokemons.map((poke) => (
+                      <div
+                        key={poke.pokemon_id} // Consider adding a unique `id` from your `user_pokemons` table here if available for distinct keys
+                        className={`flex flex-col items-center cursor-pointer transition-transform hover:scale-105`}
+                        onClick={async () => {
+                          // Fetch full info for selected pokemon
+                          const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${poke.pokemon_id}`);
+                          if (res.ok) {
+                            const data = await res.json();
+                            const types = data.types.map((t: any) => t.type.name);
+                            const abilities = data.abilities.map((a: any) => a.ability.name);
+                            const stats = data.stats.map((s: any) => ({ name: s.stat.name, value: s.base_stat }));
+                            const moveData = await Promise.all(
+                              data.moves.slice(0, 10).map(async (m: any) => {
+                                const res = await fetch(m.move.url);
+                                if (!res.ok) return { name: m.move.name, power: null, type: '' };
+                                const moveInfo = await res.json();
+                                return {
+                                  name: moveInfo.name,
+                                  power: moveInfo.power,
+                                  type: moveInfo.type?.name || '',
+                                };
+                              })
+                            );
+                            setSelectedUserPokemon({
+                              ...poke,
+                              name: data.name,
+                              types,
+                              abilities,
+                              stats,
+                              moves: moveData,
+                              image: data.sprites.other['official-artwork'].front_default,
+                              score: calculateStatScore(stats),
+                              id: data.id, // Ensure ID is included here as well
+                            });
+                          }
+                        }}
+                      >
+                        <div className="w-24 h-24 rounded-full bg-[var(--poke-blue)] flex items-center justify-center shadow-lg border-4 border-white mb-2">
+                          <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${poke.pokemon_id}.png`} alt={poke.nickname} className="w-20 h-20 object-contain" />
+                        </div>
+                        <span className="capitalize font-semibold text-[var(--poke-blue)] text-base text-center">{poke.nickname}</span>
                       </div>
-                      <span className="capitalize font-semibold text-[var(--poke-blue)] text-base text-center">{poke.nickname}</span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
               {selectedUserPokemon && (
                 <>
@@ -478,13 +497,58 @@ export default function Page({ searchParams }) {
             <>🏆 Winner: {expertWinner}</>
           ) : (
             <button
-              className="poke-btn px-8 py-3 rounded-xl"
+              className={`poke-btn px-8 py-3 rounded-xl transition 
+                ${!selectedUserPokemon ? "opacity-50 cursor-not-allowed" : "hover:scale-105 cursor-pointer"}`}
               onClick={handleBattle}
-              disabled={loading}
+              disabled={!selectedUserPokemon || loading}
             >
               {loading ? 'Battling...' : 'Battle'}
             </button>
           )}
+        </div>
+      )}
+
+      {/* Nickname Dialog */}
+      {showNicknameDialog && pendingWildPokemon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center max-w-xs w-full relative">
+            <img
+              src={pendingWildPokemon.image}
+              alt={pendingWildPokemon.name}
+              className="w-32 h-32 object-contain mb-4"
+            />
+            <h2 className="text-xl font-bold mb-2 text-[var(--poke-blue)]">You caught {pendingWildPokemon.name}!</h2>
+            <form onSubmit={handleNicknameSubmit} className="w-full flex flex-col items-center">
+              <label className="mb-2 text-[var(--poke-blue)] font-semibold" htmlFor="nickname">
+                Give a nickname (optional):
+              </label>
+              <input
+                id="nickname"
+                className="border-2 border-[var(--poke-blue)] rounded px-3 py-2 mb-4 w-full text-center text-black"
+                value={nicknameInput}
+                onChange={e => setNicknameInput(e.target.value)}
+                maxLength={32}
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="poke-btn px-6 py-2 rounded bg-[var(--poke-blue)] text-white font-bold hover:bg-[var(--poke-accent)] transition"
+              >
+                Save
+              </button>
+            </form>
+            <button
+              className="absolute top-2 right-2 text-[var(--poke-red)] text-2xl font-bold"
+              onClick={() => {
+                setShowNicknameDialog(false);
+                setPendingWildPokemon(null);
+                setNicknameInput('');
+              }}
+              title="Close"
+            >
+              ×
+            </button>
+          </div>
         </div>
       )}
     </div>
