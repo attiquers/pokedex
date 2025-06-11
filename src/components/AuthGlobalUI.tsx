@@ -6,10 +6,18 @@ import UserSidebar from '@/components/userSidebar';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
+function formatMoneyShort(n: number | null) {
+  if (n === null) return "";
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "m";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+  return n.toString();
+}
+
 export default function AuthGlobalUI() {
   const { user, loading: userLoading } = useUser();
   const [showSidebar, setShowSidebar] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [money, setMoney] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -59,15 +67,64 @@ export default function AuthGlobalUI() {
     checkStarter();
   }, [user, router]);
 
+  // Fetch user money for compressed display
+  useEffect(() => {
+    async function fetchMoney() {
+      if (!user) return setMoney(null);
+      try {
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseAnonKey) return;
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        const { data } = await supabase
+          .from("users")
+          .select("money")
+          .eq("id", user.id)
+          .single();
+        setMoney(data?.money ?? null);
+      } catch {
+        setMoney(null);
+      }
+    }
+    fetchMoney();
+  }, [user]);
+
   if (userLoading) return null;
 
   return (
     <>
       {user ? (
-        <UserSidebar
-          avatarUrl={user.user_metadata?.avatar_url || '/pokeball.png'}
-          email={user.email}
-        />
+        <>
+          {/* Show avatar with compressed money below when sidebar is closed */}
+          <div className="fixed top-4 right-4 z-50 flex flex-col items-center">
+            <button
+              onClick={() => setShowSidebar(true)}
+              className="focus:outline-none"
+              aria-label="Open user sidebar"
+              style={{ background: "none", border: "none", padding: 0 }}
+            >
+              <img
+                src={user.user_metadata?.avatar_url || '/pokeball.png'}
+                alt="Profile"
+                className="w-12 h-12 rounded-full border-2 border-blue-500 shadow-lg object-cover"
+              />
+            </button>
+            {money !== null && (
+              <span className="mt-1 text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full shadow border border-yellow-300">
+                ${formatMoneyShort(money)}
+              </span>
+            )}
+          </div>
+          {/* Sidebar with exact money shown inside UserSidebar */}
+          {showSidebar && (
+            <UserSidebar
+              avatarUrl={user.user_metadata?.avatar_url || '/pokeball.png'}
+              email={user.email}
+              // ...pass other props if needed...
+            />
+          )}
+        </>
       ) : (
         <div className="fixed top-4 right-4 z-50">
           <button

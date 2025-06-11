@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
@@ -9,7 +9,33 @@ interface UserSidebarProps {
 
 export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: UserSidebarProps) {
   const [open, setOpen] = useState(false);
+  const [money, setMoney] = useState<number | null>(null);
   const router = useRouter();
+
+  // Fetch user money when sidebar opens
+  useEffect(() => {
+    async function fetchMoney() {
+      try {
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseAnonKey) return;
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id;
+        if (!userId) return;
+        const { data, error } = await supabase
+          .from("users")
+          .select("money")
+          .eq("id", userId)
+          .single();
+        if (!error && data) setMoney(data.money);
+      } catch (err) {
+        setMoney(null);
+      }
+    }
+    if (open) fetchMoney();
+  }, [open]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -60,6 +86,11 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
               />
               <div className="font-bold text-lg text-yellow-300">{email?.split('@')[0] || 'Trainer'}</div>
               <div className="text-xs text-yellow-200 mt-1">{email}</div>
+              {money !== null && (
+                <div className="mt-2 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-bold text-base shadow border border-yellow-300">
+                  ${money}
+                </div>
+              )}
             </div>
             <button className="mb-2 poke-btn" style={{background:'var(--poke-blue)'}} onClick={() => { setOpen(false); router.push('/'); }}>
               Home
@@ -73,7 +104,7 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
             <button className="mb-2 poke-btn" style={{background:'var(--poke-yellow)', color:'var(--poke-black)'}} onClick={() => {/* TODO: resources action */}}>
               Resources
             </button>
-            <button className="mb-6 poke-btn" style={{background:'var(--poke-black)'}} onClick={() => {/* TODO: quiz action */}}>
+            <button className="mb-6 poke-btn" style={{background:'var(--poke-black)'}} onClick={() => { setOpen(false); router.push('/quiz'); }}>
               Quiz
             </button>
             <button
