@@ -44,6 +44,8 @@ export default function AuthGlobalUI() {
           });
           if (insertError) {
             console.error('Error inserting user into users table:', insertError);
+          } else {
+            router.replace('/starterpokemon');
           }
         }
       } catch (err) {

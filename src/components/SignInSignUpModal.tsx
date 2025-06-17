@@ -62,6 +62,7 @@ const SignInSignUpModal = ({ onClose }: { onClose: () => void }) => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setShowSidebar(false);
+    window.location.href = '/';
   };
 
   if (user) {

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import AnimatedNavLink from '@/utils/AnimatedNavLink';
 
 interface UserSidebarProps {
   avatarUrl?: string;
@@ -40,8 +42,7 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setOpen(false);
-    // Optionally, you can refresh the page or redirect
-    window.location.reload();
+    router.push('/');
   };
 
   return (
@@ -92,21 +93,18 @@ export default function UserSidebar({ avatarUrl = '/pokeball.png', email }: User
                 </div>
               )}
             </div>
-            <button className="mb-2 poke-btn" style={{background:'var(--poke-blue)'}} onClick={() => { setOpen(false); router.push('/'); }}>
+            <AnimatedNavLink href="/" className="mb-2 poke-btn block text-center" style={{background:'var(--poke-blue)'}} onClick={() => setOpen(false)}>
               Home
-            </button>
-            <button className="mb-2 poke-btn" style={{background:'var(--poke-green)'}} onClick={() => { setOpen(false); router.push('/region'); }}>
+            </AnimatedNavLink>
+            <AnimatedNavLink href="/region" className="mb-2 poke-btn block text-center" style={{background:'var(--poke-green)'}} onClick={() => setOpen(false)}>
               Catch Pokémon
-            </button>
-            <button className="mb-2 poke-btn" style={{background:'var(--poke-red)'}} onClick={() => { setOpen(false); router.push('/mypokemons'); }}>
+            </AnimatedNavLink>
+            <AnimatedNavLink href="/mypokemons" className="mb-2 poke-btn block text-center" style={{background:'var(--poke-red)'}} onClick={() => setOpen(false)}>
               My Pokémons
-            </button>
-            <button className="mb-2 poke-btn" style={{background:'var(--poke-yellow)', color:'var(--poke-black)'}} onClick={() => {/* TODO: resources action */}}>
-              Resources
-            </button>
-            <button className="mb-6 poke-btn" style={{background:'var(--poke-black)'}} onClick={() => { setOpen(false); router.push('/quiz'); }}>
+            </AnimatedNavLink>
+            <AnimatedNavLink href="/quiz" className="mb-6 poke-btn block text-center" style={{background:'var(--poke-yellow)', color:'var(--poke-black)'}} onClick={() => setOpen(false)}>
               Quiz
-            </button>
+            </AnimatedNavLink>
             <button
               onClick={handleLogout}
               className="mt-auto poke-btn" style={{background:'var(--poke-gray)'}}

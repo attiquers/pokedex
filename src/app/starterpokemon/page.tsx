@@ -48,7 +48,7 @@ export default function StarterPokemonPage() {
     if (error) {
       setError("Failed to add starter. Please try again.");
     } else {
-      router.push("/myPokemons");
+      router.push("/mypokemons");
     }
   }
 
@@ -72,7 +72,7 @@ export default function StarterPokemonPage() {
               <form onSubmit={handleNicknameSubmit} className="mt-6 flex flex-col items-center gap-2 w-full">
                 <label className="font-semibold text-base mb-1 text-black">Nickname your {selected.name}:</label>
                 <input
-                  className="border rounded px-4 py-2 text-lg w-full"
+                  className="border rounded px-4 py-2 text-lg w-full text-black"
                   placeholder="Nickname (optional)"
                   value={nickname}
                   onChange={e => setNickname(e.target.value)}
